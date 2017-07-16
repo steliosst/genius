@@ -22,3 +22,4 @@ post-filters:
 - strip_html
 - clean_spaces
 - utf8_encode
+- [regex, 'googletag.*\);', "\n"]
