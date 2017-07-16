@@ -8,10 +8,17 @@ variables:
         - lowercase
         - [regex, '[^\sa-z0-9]\s*', ""]
         - [strip_nonascii, -]
+
     title:
         type: title
         filters: artist
 
 config:
     url: "http://genius.com/{artist}-{title}-lyrics"
-    pattern: ['<div\s+class="lyrics"[^>]*?>(?<lyrics>.*?)</div>', s]
+#The new patttern for genius.com
+    pattern: ['<div\s+class="song_body-lyrics"[^>]*?>(?<lyrics>.*?)</lyrics>', s]
+    
+post-filters:
+- strip_html
+- clean_spaces
+- utf8_encode
