@@ -1,0 +1,37 @@
+name: "Genius4"
+
+variables:
+    artist:
+        type: artist
+        filters:
+        - strip_diacritics
+        - lowercase
+        - [replace, "!!!", "chk-chik-chick"]    # !!! (Chk Chk Chk) artist exception
+        - [regex, '(?<=\W|\s)+(feat.+|ft[\W\s]+|(f\.\s)).+', ""]
+                                                # ^ Strip F./ft/eat/uring + everything after
+        - [regex, '\s&(?=\s)', " and"]          # Replace " &" with " and"
+                                                    ## ^ Currently superfluous (for ARTIST) bc plugin preemptively replaces "&" with "and"
+                                                        ### ^ But still necessary for <title> "&" replacement
+        - [regex, '\.+|,+|(\W+(?=$))|(^\W+)', ""]   # Strip "." + "," + beginning/end of string non-word chars
+        - [regex, "'", ""]                      # Separate expression bc of annoying way YAML escapes '
+        - [regex, '(?<=[a-z0-9%])[^\sa-z0-9%]+(?=[a-z0-9%]+)', "-"]
+                                                # ^ Replace medial non-alphanumeric char(s) with single "-" e.g., f**k > f-k
+        - [regex, '((?<=\s)([^a-z0-9\s-])+(\s|\W)+)|((?<=\w)([^a-z0-9-])+(\s|\W)+)', " "]
+                                                # ^ Clean up any remaining successive non-alphanumeric chars before strip_nonascii
+                                                    ## ^ Long & stupid bc couldn't figure out YAML-friendly non-capturing "(?:...)"
+                                                        ### ^ EZ version: [regex, '\W+(?:\W)(?<!$)', " "]
+        - [strip_nonascii, -]
+    title:
+        type: title
+        filters: artist
+
+config:
+    url: "http://genius.com/{artist}-{title}-lyrics"
+    pattern: ['<div\s+class="song_body-lyrics"[^>]*?>[\s\S]*?<p>(?<lyrics>[\s\S]*?)</p>', s]
+
+post-filters:
+- strip_html
+- clean_spaces
+- utf8_encode
+
+- [regex, 'googletag.*\);', "\n"]
